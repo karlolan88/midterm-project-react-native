@@ -1,53 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
-import axios from 'axios';
-import { v4 as uuidv4 } from 'uuid';
 import { useNavigation } from '@react-navigation/native';
-
-const API_URL = 'https://empllo.com/api/v1';
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  salary: string;
-}
+import useFetchJobs, { Job } from '../hooks/useFetchJobs';
 
 const JobFinderScreen: React.FC = () => {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const { jobs, loading, refreshing, onRefresh } = useFetchJobs();
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [refreshing, setRefreshing] = useState<boolean>(false);
   const navigation = useNavigation();
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      const response = await axios.get(API_URL);
-      const jobsWithId = response.data.map((job: any) => ({
-        id: uuidv4(),
-        title: job.title || 'No Title',
-        company: job.company || 'Unknown Company',
-        salary: job.salary || 'Not Specified',
-      }));
-      setJobs(jobsWithId);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  }, []);
 
   const saveJob = (job: Job) => {
     if (!savedJobs.find(j => j.id === job.id)) {
